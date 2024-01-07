@@ -62,6 +62,8 @@ public class TrainTicketQueryParamVerifyChainFilter implements TrainTicketQueryC
     private static boolean CACHE_DATA_ISNULL_AND_LOAD_FLAG = false;
 
     @Override
+    // 实际上就是验证出发地跟目的地是否正确，如果是第一次请求，则会把所有车站都缓存到redis中
+    // 这里可以发散一下：车站信息有更新的话，需要更新缓存
     public void handler(TicketPageQueryReqDTO requestParam) {
         StringRedisTemplate stringRedisTemplate = (StringRedisTemplate) distributedCache.getInstance();
         HashOperations<String, Object, Object> hashOperations = stringRedisTemplate.opsForHash();
@@ -69,13 +71,17 @@ public class TrainTicketQueryParamVerifyChainFilter implements TrainTicketQueryC
                 QUERY_ALL_REGION_LIST,
                 ListUtil.toList(requestParam.getFromStation(), requestParam.getToStation())
         );
+        // emen:mGet 如果key不存在，会返回null，因此取出空的集合进行判断
         long emptyCount = actualExistList.stream().filter(Objects::isNull).count();
+        // emen: 为0说明出发跟目的地都存在，验证通过
         if (emptyCount == 0L) {
             return;
         }
+        // emen:CACHE_DATA_ISNULL_AND_LOAD_FLAG && distributedCache.hasKey(QUERY_ALL_REGION_LIST) 这段代码表明已经缓存过了，却发现出发地或者目的地不存在，
         if (emptyCount == 1L || (emptyCount == 2L && CACHE_DATA_ISNULL_AND_LOAD_FLAG && distributedCache.hasKey(QUERY_ALL_REGION_LIST))) {
             throw new ClientException("出发地或目的地不存在");
         }
+        // 下面开始缓存数据
         RLock lock = redissonClient.getLock(LOCK_QUERY_ALL_REGION_LIST);
         lock.lock();
         try {
@@ -84,6 +90,7 @@ public class TrainTicketQueryParamVerifyChainFilter implements TrainTicketQueryC
                         QUERY_ALL_REGION_LIST,
                         ListUtil.toList(requestParam.getFromStation(), requestParam.getToStation())
                 );
+                // emen: 应该换成 existCount 才合适，用 emptyCount 属于偷懒行为，容易造成误解
                 emptyCount = actualExistList.stream().filter(Objects::nonNull).count();
                 if (emptyCount != 2L) {
                     throw new ClientException("出发地或目的地不存在");
@@ -93,6 +100,7 @@ public class TrainTicketQueryParamVerifyChainFilter implements TrainTicketQueryC
             List<RegionDO> regionDOList = regionMapper.selectList(Wrappers.emptyWrapper());
             List<StationDO> stationDOList = stationMapper.selectList(Wrappers.emptyWrapper());
             HashMap<Object, Object> regionValueMap = Maps.newHashMap();
+            // emen: 这里是把车站跟地区都缓存起来，因为是搜索的时候，既可以搜地区，也可以搜车站
             for (RegionDO each : regionDOList) {
                 regionValueMap.put(each.getCode(), each.getName());
             }
