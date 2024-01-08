@@ -162,6 +162,8 @@ public class TicketServiceImpl extends ServiceImpl<TicketMapper, TicketDO> imple
         // 列车查询逻辑较为复杂，详细解析文章查看 https://nageoffer.com/12306/question
         // v1 版本存在严重的性能深渊问题，v2 版本完美的解决了该问题。通过 Jmeter 压测聚合报告得知，性能提升在 300% - 500%+
 
+
+        // todo: 你说的性能深渊在哪儿呢？
         // emen: 地区与站点映射查询映射，没有的话就获取分布式锁存到缓存
         List<Object> stationDetails = stringRedisTemplate.opsForHash()
                 .multiGet(REGION_TRAIN_STATION_MAPPING, Lists.newArrayList(requestParam.getFromStation(), requestParam.getToStation()));
@@ -186,16 +188,18 @@ public class TicketServiceImpl extends ServiceImpl<TicketMapper, TicketDO> imple
                 lock.unlock();
             }
         }
-        // todo
-
+        // emen: 下面是座位信息
         List<TicketListDTO> seatResults = new ArrayList<>();
         String buildRegionTrainStationHashKey = String.format(REGION_TRAIN_STATION, stationDetails.get(0), stationDetails.get(1));
         Map<Object, Object> regionTrainStationAllMap = stringRedisTemplate.opsForHash().entries(buildRegionTrainStationHashKey);
+        // emen: 座位信息用redis缓存，如果为空，说明是第一次处理
         if (MapUtil.isEmpty(regionTrainStationAllMap)) {
             RLock lock = redissonClient.getLock(LOCK_REGION_TRAIN_STATION);
             lock.lock();
             try {
                 regionTrainStationAllMap = stringRedisTemplate.opsForHash().entries(buildRegionTrainStationHashKey);
+                // emen: 加锁之后，还判断一次缓存是否非空。
+                // 因为获取锁跟加锁不是原子的，有可能跟别的线程同时获取到锁，但是别的线程先加了锁已经处理完毕了。这种情况只需要释放锁就行了
                 if (MapUtil.isEmpty(regionTrainStationAllMap)) {
                     LambdaQueryWrapper<TrainStationRelationDO> queryWrapper = Wrappers.lambdaQuery(TrainStationRelationDO.class)
                             .eq(TrainStationRelationDO::getStartRegion, stationDetails.get(0))
@@ -236,9 +240,12 @@ public class TicketServiceImpl extends ServiceImpl<TicketMapper, TicketDO> imple
                 lock.unlock();
             }
         }
+        // emen: 什么时候会出现 seatResults 为空的情况？
+        // 答：第一次进入，多线程环境，某个线程获取锁失败，这个时候regionTrainStationAllMap有值，但是seatResults没有初始化
         seatResults = CollUtil.isEmpty(seatResults)
                 ? regionTrainStationAllMap.values().stream().map(each -> JSON.parseObject(each.toString(), TicketListDTO.class)).toList()
                 : seatResults;
+        // 按照出发时间排序
         seatResults = seatResults.stream().sorted(new TimeStringComparator()).toList();
         for (TicketListDTO each : seatResults) {
             String trainStationPriceStr = distributedCache.safeGet(
@@ -259,6 +266,7 @@ public class TicketServiceImpl extends ServiceImpl<TicketMapper, TicketDO> imple
             trainStationPriceDOList.forEach(item -> {
                 String seatType = String.valueOf(item.getSeatType());
                 String keySuffix = StrUtil.join("_", each.getTrainId(), item.getDeparture(), item.getArrival());
+                // emen: 此处只是查，最关键的是加和减
                 Object quantityObj = stringRedisTemplate.opsForHash().get(TRAIN_STATION_REMAINING_TICKET + keySuffix, seatType);
                 int quantity = Optional.ofNullable(quantityObj)
                         .map(Object::toString)

@@ -58,6 +58,18 @@ public class SeatDO extends BaseDO {
 
     /**
      * 座位类型
+     * 根据页面数据，分为
+     * 商务座/特等座
+     * 一等座
+     * 二等座/二等包座
+     * 动卧
+     * 高级软卧
+     * 软卧/一等卧
+     * 硬卧/二等卧
+     * 软座
+     * 硬座
+     * 无座
+     * 其他
      */
     private Integer seatType;
 

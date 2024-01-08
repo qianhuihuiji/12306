@@ -90,6 +90,10 @@ public final class StationCalculateUtil {
         List<String> stations = Arrays.asList("北京南", "济南西", "南京南", "杭州东", "宁波");
         String startStation = "北京南";
         String endStation = "南京南";
+        System.out.println("takeoutStation:");
         StationCalculateUtil.takeoutStation(stations, startStation, endStation).forEach(System.out::println);
+
+        System.out.println("throughStation:");
+        StationCalculateUtil.throughStation(stations, startStation, endStation).forEach(System.out::println);
     }
 }

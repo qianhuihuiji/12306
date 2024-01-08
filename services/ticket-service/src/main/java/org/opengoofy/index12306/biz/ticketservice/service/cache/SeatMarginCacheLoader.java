@@ -84,6 +84,7 @@ public class SeatMarginCacheLoader {
                         case 0 -> {
                             for (RouteDTO each : routeDTOList) {
                                 Map<String, String> trainStationRemainingTicket = new LinkedHashMap<>();
+                                // emen: 可以优化为一次查询
                                 trainStationRemainingTicket.put("0", selectSeatMargin(trainId, 0, each.getStartStation(), each.getEndStation()));
                                 trainStationRemainingTicket.put("1", selectSeatMargin(trainId, 1, each.getStartStation(), each.getEndStation()));
                                 trainStationRemainingTicket.put("2", selectSeatMargin(trainId, 2, each.getStartStation(), each.getEndStation()));
