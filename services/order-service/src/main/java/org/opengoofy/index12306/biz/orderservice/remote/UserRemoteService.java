@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 /**
  * 用户远程服务调用
  *
- * @公众号：马丁玩编程，回复：加群，添加马哥微信（备注：12306）获取项目资料
  */
 // emen: 这个用法还没见过，注意一下
 @FeignClient(value = "index12306-user${unique-name:}-service", url = "${aggregation.remote-url:}")
