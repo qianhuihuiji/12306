@@ -4,8 +4,9 @@ spring:
   application:
     name: index12306-gateway${unique-name:}-service
   profiles:
-    active: aggregation
-    # active: dev
+    # 坑货，开发环境不默认用 dev 的配置文件
+#    active: aggregation
+     active: dev
   cloud:
     nacos:
       discovery:
