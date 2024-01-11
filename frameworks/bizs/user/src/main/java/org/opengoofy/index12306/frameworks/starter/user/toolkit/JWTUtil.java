@@ -51,6 +51,7 @@ public final class JWTUtil {
      *
      * @param userInfo 用户信息
      * @return 用户访问 Token
+     *
      */
     public static String generateAccessToken(UserInfoDTO userInfo) {
         Map<String, Object> customerUserMap = new HashMap<>();

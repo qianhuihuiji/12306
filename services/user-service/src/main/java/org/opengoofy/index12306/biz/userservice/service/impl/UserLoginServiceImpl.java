@@ -102,7 +102,9 @@ public class UserLoginServiceImpl implements UserLoginService {
                 break;
             }
         }
+        // emen: 这里查询的都是分库分表的数据
         String username;
+        // emen: 反正都把用户名查出来
         if (mailFlag) {
             LambdaQueryWrapper<UserMailDO> queryWrapper = Wrappers.lambdaQuery(UserMailDO.class)
                     .eq(UserMailDO::getMail, usernameOrMailOrPhone);
@@ -128,6 +130,7 @@ public class UserLoginServiceImpl implements UserLoginService {
                     .username(userDO.getUsername())
                     .realName(userDO.getRealName())
                     .build();
+            // 这里是没有引入spring security的，只是使用的jwt
             String accessToken = JWTUtil.generateAccessToken(userInfo);
             UserLoginRespDTO actual = new UserLoginRespDTO(userInfo.getUserId(), requestParam.getUsernameOrMailOrPhone(), userDO.getRealName(), accessToken);
             distributedCache.put(accessToken, JSON.toJSONString(actual), 30, TimeUnit.MINUTES);

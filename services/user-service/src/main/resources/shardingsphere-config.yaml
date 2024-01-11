@@ -56,6 +56,7 @@ rules:
           standard:
             shardingColumn: phone
             shardingAlgorithmName: t_user_phone_table_hash_mod
+    # 分片的算法配置
     shardingAlgorithms:
       user_database_hash_mod:
         type: CLASS_BASED

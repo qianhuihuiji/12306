@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.Properties;
 
 /**
- * Custom db hash sharding algorithm.
+ * 自定义的分库分表算法
  */
 public final class CustomDbHashModShardingAlgorithm implements StandardShardingAlgorithm<Comparable<?>> {
 
