@@ -69,6 +69,7 @@ public class SeatMarginCacheLoader {
             StringRedisTemplate stringRedisTemplate = (StringRedisTemplate) distributedCache.getInstance();
             Object quantityObj = stringRedisTemplate.opsForHash().get(TRAIN_STATION_REMAINING_TICKET + keySuffix, seatType);
             if (CacheUtil.isNullOrBlank(quantityObj)) {
+                // emen: 列车信息也是缓存在redis中，尽可能减少与db的交互
                 TrainDO trainDO = distributedCache.safeGet(
                         TRAIN_INFO + trainId,
                         TrainDO.class,
@@ -121,6 +122,7 @@ public class SeatMarginCacheLoader {
                     trainStationRemainingTicketMaps.put(TRAIN_STATION_REMAINING_TICKET + keySuffix, trainStationRemainingTicket);
                 }
                 // TODO LUA 脚本执行
+                // todo: lua 脚本为何能做到原子性？
                 trainStationRemainingTicketMaps.forEach((cacheKey, cacheMap) -> stringRedisTemplate.opsForHash().putAll(cacheKey, cacheMap));
             }
         } finally {

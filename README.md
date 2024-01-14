@@ -32,4 +32,11 @@ docker run -d \
 -e "JAVA_OPT_EXT=-server -Xms512m -Xmx512m" \
 foxiswho/rocketmq:broker-4.5.1
 ```
-这样启动的容器，java程序连不上，因为 `brokerIP1`配置不生效，只能进入到容器，修改`/etc/rocketmq/broker.conf`，加上这行配置再重启。
+这样启动的容器，java程序连不上，因为 `brokerIP1`配置不生效，只能进入到容器，修改`/etc/rocketmq/broker.conf`，加上这行配置再重启：
+```
+brokerIP1 = 宿主机ipv4地址
+```
+用 `ipconfig`查看得到，本机是 `192.168.2.27`
+
+- 20240114 
+ 阅读 `ticket-service/ticket/purchase/v2` 接口，未完待续
