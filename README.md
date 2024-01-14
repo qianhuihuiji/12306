@@ -7,4 +7,29 @@
 - 20240111
   阅读 login 接口，准备从功能、页面入手
 - 20240112
- rocket mq按照有问题，无法下单
+ rocket mq安装有问题，无法下单
+ 按照文档所说，配置文件放在 /docker/software/rocketmq/conf/broker.conf 中：
+```
+brokerClusterName = DefaultCluster
+brokerName = broker-a
+brokerId = 0
+deleteWhen = 04
+fileReservedTime = 48
+brokerRole = ASYNC_MASTER
+flushDiskType = ASYNC_FLUSH
+brokerIP1 = 127.0.0.1
+```
+启动容器命令为：
+```
+docker run -d \
+-p 10911:10911 \
+-p 10909:10909 \
+--name rmqbroker \
+--link rmqnamesrv:namesrv \
+-v ${HOME}/docker/software/rocketmq/conf/broker.conf:/etc/rocketmq/broker.conf \
+-e "NAMESRV_ADDR=namesrv:9876" \
+-e "JAVA_OPTS=-Duser.home=/opt" \
+-e "JAVA_OPT_EXT=-server -Xms512m -Xmx512m" \
+foxiswho/rocketmq:broker-4.5.1
+```
+这样启动的容器，java程序连不上，因为 `brokerIP1`配置不生效，只能进入到容器，修改`/etc/rocketmq/broker.conf`，加上这行配置再重启。
