@@ -69,7 +69,7 @@ public final class TrainSeatTypeSelector {
         Map<Integer, List<PurchaseTicketPassengerDetailDTO>> seatTypeMap = passengerDetails.stream()
                 .collect(Collectors.groupingBy(PurchaseTicketPassengerDetailDTO::getSeatType));
         List<TrainPurchaseTicketRespDTO> actualResult = new CopyOnWriteArrayList<>();
-        if (seatTypeMap.size() > 1) {
+        if (seatTypeMap.size() > 1) { // emen: 多种座位类型，有必要用线程池？
             List<Future<List<TrainPurchaseTicketRespDTO>>> futureResults = new ArrayList<>();
             seatTypeMap.forEach((seatType, passengerSeatDetails) -> {
                 // 线程池参数如何设置？详情查看：https://nageoffer.com/12306/question
@@ -85,7 +85,7 @@ public final class TrainSeatTypeSelector {
                     throw new ServiceException("站点余票不足，请尝试更换座位类型或选择其它站点");
                 }
             });
-        } else {
+        } else { // emen: 单一座位类型
             seatTypeMap.forEach((seatType, passengerSeatDetails) -> {
                 List<TrainPurchaseTicketRespDTO> aggregationResult = distributeSeats(trainType, seatType, requestParam, passengerSeatDetails);
                 actualResult.addAll(aggregationResult);
@@ -138,7 +138,10 @@ public final class TrainSeatTypeSelector {
         return actualResult;
     }
 
-    private List<TrainPurchaseTicketRespDTO> distributeSeats(Integer trainType, Integer seatType, PurchaseTicketReqDTO requestParam, List<PurchaseTicketPassengerDetailDTO> passengerSeatDetails) {
+    private List<TrainPurchaseTicketRespDTO> distributeSeats(Integer trainType,
+                                                             Integer seatType,
+                                                             PurchaseTicketReqDTO requestParam,
+                                                             List<PurchaseTicketPassengerDetailDTO> passengerSeatDetails) {
         String buildStrategyKey = VehicleTypeEnum.findNameByCode(trainType) + VehicleSeatTypeEnum.findNameByCode(seatType);
         SelectSeatDTO selectSeatDTO = SelectSeatDTO.builder()
                 .seatType(seatType)

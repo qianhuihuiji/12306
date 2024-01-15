@@ -92,8 +92,8 @@ public final class TicketAvailabilityTokenBucket {
                 () -> trainMapper.selectById(requestParam.getTrainId()),
                 ADVANCE_TICKET_DAY,
                 TimeUnit.DAYS);
-        List<RouteDTO> routeDTOList = trainStationService
-                .listTrainStationRoute(requestParam.getTrainId(), trainDO.getStartStation(), trainDO.getEndStation());
+        List<RouteDTO> routeDTOList = trainStationService.listTrainStationRoute(requestParam.getTrainId(),
+                trainDO.getStartStation(), trainDO.getEndStation());
         StringRedisTemplate stringRedisTemplate = (StringRedisTemplate) distributedCache.getInstance();
         String actualHashKey = TICKET_AVAILABILITY_TOKEN_BUCKET + requestParam.getTrainId();
         Boolean hasKey = distributedCache.hasKey(actualHashKey);

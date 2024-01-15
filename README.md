@@ -40,3 +40,8 @@ brokerIP1 = 宿主机ipv4地址
 
 - 20240114 
  阅读 `ticket-service/ticket/purchase/v2` 接口，未完待续
+
+  - 20240115
+   `rocket mq console` 要比 rocket mq 后启动，不然无法连接。
+    - 阅读代码中提到了令牌桶算法
+    - `ReentrantLock` 锁用法

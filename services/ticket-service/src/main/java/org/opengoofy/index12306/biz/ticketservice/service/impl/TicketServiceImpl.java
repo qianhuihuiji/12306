@@ -370,6 +370,7 @@ public class TicketServiceImpl extends ServiceImpl<TicketMapper, TicketDO> imple
         }
     }
 
+    // emen: 一天有效期的内存缓存
     private final Cache<String, ReentrantLock> localLockMap = Caffeine.newBuilder()
             .expireAfterWrite(1, TimeUnit.DAYS)
             .build();
@@ -393,6 +394,7 @@ public class TicketServiceImpl extends ServiceImpl<TicketMapper, TicketDO> imple
             ReentrantLock localLock = localLockMap.getIfPresent(lockKey);
             if (localLock == null) {
                 synchronized (TicketService.class) {
+                    // emen: 有点双检锁的意思
                     if ((localLock = localLockMap.getIfPresent(lockKey)) == null) {
                         localLock = new ReentrantLock(true);
                         localLockMap.put(lockKey, localLock);
@@ -404,6 +406,7 @@ public class TicketServiceImpl extends ServiceImpl<TicketMapper, TicketDO> imple
             distributedLockList.add(distributedLock);
         });
         try {
+            // emen:内存锁+分布式锁，为何如此设计？
             localLockList.forEach(ReentrantLock::lock);
             distributedLockList.forEach(RLock::lock);
             return ticketService.executePurchaseTickets(requestParam);
