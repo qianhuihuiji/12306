@@ -436,7 +436,7 @@ const cardInfoColumns = [
     key: 'departureTime'
   },
   {
-    title: '停留时间',
+    title: '停留时间(分钟)',
     dataIndex: 'stopoverTime',
     key: 'stopoverTime'
   }
